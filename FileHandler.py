@@ -2,8 +2,10 @@ import sys
 import os 
 import xml.etree.ElementTree as ET
 import logging 
+from fitparse import FitFile
 
-class GpsData():
+
+class GpsDataFile():
     
     def __init__(self, fileName):
         self.fileName = fileName
@@ -14,6 +16,8 @@ class GpsData():
         if extension == ".gpx":
             logging.debug("Parsing GPX file")
             self.parseGpx()
+        elif extension == ".fit":
+            self.parseFit()
         else:
             err= "File type {} not supported. Unable to parse {}".format(extension, fileName)
             raise NotImplementedError(err)
@@ -21,6 +25,30 @@ class GpsData():
 
     def getCoordinates(self):
         return self.coordinateList
+
+    # parses a fit file
+    def parseFit(self):
+        coordinates = []
+
+        try:
+            fitFile = FitFile(self.fileName) 
+        except Exception as e:
+            logging.debug("Error while parsing {} ".format(self.fileName))
+            logging.debug(str(e))
+            raise e
+        for record in fitFile.get_messages('record'):
+
+            # Go through all the data entries in this record
+            data = record.get_values()
+            lat = data.get("position_lat")
+            lon = data.get("position_long")
+
+            if lat is None or lon is None:
+                continue
+            coordinates.append([lat,lon])
+
+        logging.debug("Found {} coordinate pairs".format(len(coordinates)))
+        self.coordinateList = coordinates
 
     # parses a gpx file 
     def parseGpx(self):
@@ -55,7 +83,7 @@ class GpsData():
 
                     try:
                         # find the coordinate pair
-                        coordinatePair = (trkpt.attrib["lat"], trkpt.attrib["lon"])
+                        coordinatePair = [trkpt.attrib["lat"], trkpt.attrib["lon"]]
                         # logging.debug("Coordinate {} appended".format(coordinatePair))
 
                         # append the coordinate pair to our list
@@ -67,6 +95,8 @@ class GpsData():
 
         logging.debug("Coordinate scan completed")
         logging.debug("Found {} coordinate pairs".format(len(coordinates)))
+
+        self.coordinateList = coordinates 
 
 
     def removeNameSpaceGpx(self, inputString):
