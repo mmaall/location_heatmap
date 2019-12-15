@@ -6,9 +6,20 @@ from fitparse import FitFile
 
 
 class GpsDataFile():
-    
-    def __init__(self, fileName):
+   
+    # File name contains the file that we are parsing
+    # Sampling factor selects how much of the data we sample in a specific file.
+    # Should be between 0 and 1 
+    def __init__(self, fileName, samplingFactor = 1):
         self.fileName = fileName
+
+        # We can't have a samplingFactor of zero so it is 1 if you try 0
+        # TODO: Throw an error here 
+        if samplingFactor == 0:
+            samplingFactor = 1
+
+
+        self.modValue = 1/samplingFactor
         strippedFileName, extension = os.path.splitext(fileName)
         self.coordinateList = []
         logging.debug("GPS Filename: {}".format(self.fileName))
@@ -31,7 +42,7 @@ class GpsDataFile():
         coordinates = []
 
         try:
-            fitFile = FitFile(self.fileName) 
+            fitFile = FitFile(self.fileName, check_crc = False) 
         except Exception as e:
             logging.debug("Error while parsing {} ".format(self.fileName))
             logging.debug(str(e))

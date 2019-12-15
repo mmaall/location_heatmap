@@ -68,8 +68,9 @@ def main(argv):
         try:
             data = GpsDataFile(file)
         except Exception as e:
-            logging.debug("Error thrown while parsing {}. ".format(file))
-            logging.debug("File ignored, processing continues") 
+            logging.error("Error thrown while parsing {}. ".format(file))
+            logging.error(str(e))
+            logging.error("File ignored, processing continues") 
             continue
         coordinateList.extend(data.getCoordinates())
 
