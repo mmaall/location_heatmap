@@ -10,24 +10,28 @@ class GpsDataFile():
     # File name contains the file that we are parsing
     # Sampling factor selects how much of the data we sample in a specific file.
     # Should be between 0 and 1 
-    def __init__(self, fileName, samplingFactor = 1):
+    def __init__(self, fileName, samplingFactor = 1.0):
         self.fileName = fileName
 
         # We can't have a samplingFactor of zero so it is 1 if you try 0
         # TODO: Throw an error here 
         if samplingFactor == 0:
-            samplingFactor = 1
+            samplingFactor = 1.0
 
 
-        self.modValue = 1/samplingFactor
+
+        self.modValue = int(1/samplingFactor)
         strippedFileName, extension = os.path.splitext(fileName)
         self.coordinateList = []
         logging.debug("GPS Filename: {}".format(self.fileName))
+        logging.debug("Sampling factor: {}".format(samplingFactor))
+        logging.debug("Modulo Number: {}".format(self.modValue))
         # Parse as a gpx file 
         if extension == ".gpx":
             logging.debug("Parsing GPX file")
             self.parseGpx()
         elif extension == ".fit":
+            logging.debug("Parsing FIT file")
             self.parseFit()
         else:
             err= "File type {} not supported. Unable to parse {}".format(extension, fileName)
@@ -47,7 +51,15 @@ class GpsDataFile():
             logging.debug("Error while parsing {} ".format(self.fileName))
             logging.debug(str(e))
             raise e
+
+        i = 0 
         for record in fitFile.get_messages('record'):
+            # iterate that counter first 
+            i+=1
+
+            # Ensures proper sampling.  
+            if i % self.modValue != 0:
+                continue
 
             # Go through all the data entries in this record
             data = record.get_values()
@@ -89,8 +101,13 @@ class GpsDataFile():
             for trkSegNode in trksegNodes:
 
                 trkptNodes = self.findNodes(trkSegNode, "trkpt") 
-
+                i = 0 
                 for trkpt in trkptNodes:
+                    # iterate the counter first 
+                    i += 1
+                    # ensure proper sampling 
+                    if i % self.modValue != 0:
+                        continue
 
                     try:
                         # find the coordinate pair
@@ -103,7 +120,6 @@ class GpsDataFile():
                     except ValueError as e:
                         logging.error(str(e))
                         logging.error("Error ignored, continuing onto other data points")
-
         logging.debug("Coordinate scan completed")
         logging.debug("Found {} coordinate pairs".format(len(coordinates)))
 

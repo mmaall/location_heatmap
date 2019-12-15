@@ -19,10 +19,29 @@ def main(argv):
             action= 'store_true'
         )
 
+    p.add_argument(
+            "-s", "--sampling_factor", 
+            help= "input a sampling factor between [0 and 1)",
+            type= float,
+        )
+
     args = p.parse_args()
     if args.debug:
         logging.basicConfig(level= logging.DEBUG)
 
+    samplingFactor = 1
+
+    if args.sampling_factor:
+        sampling_factor = args.sampling_factor
+        try:
+            sampling_factor= float(sampling_factor)
+        except ValueError as e:
+            print("Sampling factor must be an integer or float")
+            print(str(e))
+            exit()
+        samplingFactor = sampling_factor
+
+    logging.debug("Sampling factor: {}".format(samplingFactor))
     # Holds the valid file extensions we can handle.
     # This may need to be extracted into a config file to be pretty
     validExtensions = [".gpx", ".fit"]
@@ -66,11 +85,11 @@ def main(argv):
     for file in fileNames:
         logging.debug("Extracting from {}".format(file))
         try:
-            data = GpsDataFile(file)
+            data = GpsDataFile(file, samplingFactor= samplingFactor)
         except Exception as e:
-            logging.error("Error thrown while parsing {}. ".format(file))
-            logging.error(str(e))
-            logging.error("File ignored, processing continues") 
+            logging.debug("Error thrown while parsing {}. ".format(file))
+            logging.debug(str(e))
+            logging.debug("File ignored, processing continues") 
             continue
         coordinateList.extend(data.getCoordinates())
 
