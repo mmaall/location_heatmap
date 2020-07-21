@@ -16,7 +16,10 @@ class GpsDataFile():
         # We can't have a samplingFactor of zero so it is 1 if you try 0
         # TODO: Throw an error here 
         if samplingFactor == 0:
+            
+            # Throw an error and let generate heatmap handle it 
             samplingFactor = 1.0
+
 
 
 
@@ -36,17 +39,22 @@ class GpsDataFile():
         else:
             err= "File type {} not supported. Unable to parse {}".format(extension, fileName)
             raise NotImplementedError(err)
-    
+   
 
     def getCoordinates(self):
         return self.coordinateList
+
+
+    # Get the mean coordinate 
+    def getMeanCoordinate(self):
+        pass
 
     # parses a fit file
     def parseFit(self):
         coordinates = []
 
         try:
-            fitFile = FitFile(self.fileName, check_crc = False) 
+            fitFile = FitFile(self.fileName, check_crc = True) 
         except Exception as e:
             logging.debug("Error while parsing {} ".format(self.fileName))
             logging.debug(str(e))
@@ -63,9 +71,12 @@ class GpsDataFile():
 
             # Go through all the data entries in this record
             data = record.get_values()
-            lat = data.get("position_lat")
-            lon = data.get("position_long")
+            logging.debug("Message data: {}".format(data))
+            # must convert lat and long to degrees as well
+            lat = self.convertToDegrees(data.get("position_lat"))
+            lon = self.convertToDegrees(data.get("position_long"))
 
+            logging.debug("Position: ({}, {})".format(lat, lon))
             if lat is None or lon is None:
                 continue
             coordinates.append([lat,lon])
@@ -116,7 +127,6 @@ class GpsDataFile():
 
                         # append the coordinate pair to our list
                         coordinates.append(coordinatePair) 
-
                     except ValueError as e:
                         logging.error(str(e))
                         logging.error("Error ignored, continuing onto other data points")
@@ -146,3 +156,34 @@ class GpsDataFile():
                 nodes.append(child) 
 
         return nodes 
+
+    @staticmethod
+
+    def convertToDegrees(semicircleValue):
+        return semicircleValue * (180 / pow(2,31))
+
+    # Verifies whether the coordinates are valid or not
+    # TODO: FINISH THIS, it does not work
+    @staticmethod
+
+    def checkValidCoorinate(coordinatePair):
+        
+        # verify a coordinate pair is passed in 
+        if not isinstance(coordinatePair, list):
+            # A list was not put in. Should this throw an error? 
+
+            # TODO: Decide whether this should except or not  
+            return False
+
+        try:
+            # read in the coordinate pair
+            lat, lon = coordinatePair
+        
+        except ValueError as e:
+            logging.error("Error reading coordinate pair")
+            logging.error(str(e))
+            logging.error("Error suppressed. Coordinate considered invalid")
+            return False
+
+        # This is broken, will return true 
+        return true
