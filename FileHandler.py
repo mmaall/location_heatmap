@@ -39,15 +39,38 @@ class GpsDataFile():
         else:
             err= "File type {} not supported. Unable to parse {}".format(extension, fileName)
             raise NotImplementedError(err)
-   
+  
+        # Now initialize some important values
+        self.calculateCenter()
+        logging.debug("File Center: {}".format(self.fileCenter))
 
     def getCoordinates(self):
         return self.coordinateList
 
 
-    # Get the mean coordinate 
-    def getMeanCoordinate(self):
-        pass
+    # Get the mean coordinate
+    # defines tuple fileCenter which is (x,y)
+
+    def calculateCenter(self):
+        meanX = 0.0
+        meanY = 0.0
+
+        coordinateCount = 0 
+        for x, y in self.coordinateList:
+            meanX += x
+            meanY += y
+            coordinateCount +=1
+
+        meanX = meanX / coordinateCount
+        meanY = meanY / coordinateCount
+
+        self.fileCenter = (meanX, meanY)
+
+    def getFirstCoordinate(self):
+        return self.coordinateList[0]
+
+    def getLastCoordinate(self):
+        return self.coordinateList[-1] 
 
     # parses a fit file
     def parseFit(self):
