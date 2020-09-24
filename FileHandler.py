@@ -49,7 +49,7 @@ class GpsDataFile():
 
 
     # Get the mean coordinate
-    # defines tuple fileCenter which is (x,y)
+    # defines list fileCenter which is [x,y]
 
     def calculateCenter(self):
         meanX = 0.0
@@ -64,7 +64,10 @@ class GpsDataFile():
         meanX = meanX / coordinateCount
         meanY = meanY / coordinateCount
 
-        self.fileCenter = (meanX, meanY)
+        self.fileCenter = [meanX, meanY]
+
+    def getCenter(self):
+        return self.fileCenter
 
     def getFirstCoordinate(self):
         return self.coordinateList[0]
@@ -72,6 +75,8 @@ class GpsDataFile():
     def getLastCoordinate(self):
         return self.coordinateList[-1] 
 
+    def getCoordinateList(self):
+        return self.coordinateList
     # parses a fit file
     def parseFit(self):
         coordinates = []
